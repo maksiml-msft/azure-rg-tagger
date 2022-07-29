@@ -40,7 +40,7 @@ module.exports = async function (context, req) {
                 { 
                     tags: 
                         { 
-                            DevOwner: userName
+                            CreatedBy: userName
                         }
                     }
                 }).catch(error => {
