@@ -1,3 +1,6 @@
+const { AzureCliCredential, ManagedIdentityCredential } = require("@azure/identity");
+const { ResourceGroup, ResourceManagementClient, TagsPatchResource } = require("@azure/arm-resources");
+
 module.exports = async function (context, req) {
     context.log.verbose("started");
     var eventPayload = require('zealit')(req.body.data); //helps nested lookups by turning undefined gets to exceptions
@@ -23,7 +26,29 @@ module.exports = async function (context, req) {
         return;
     }
 
-    end(200, "done:" + rgName, "verbose");
+    var credential = createCredentials();
+    const resourceClient = new ResourceManagementClient(credential, subscriptionId);
+    const resourceGroup = await resourceClient.resourceGroups.get(rgName).catch(error => {
+        context.log.verbose("error getting resource group metadata: " + error.message);
+        end(500, "error getting resource group metadata: " + error.message, "error");
+    });
+
+    await resourceClient.tagsOperations.updateAtScope(resourceGroup.id, 
+        { 
+            operation: "merge",
+            properties: 
+                { 
+                    tags: 
+                        { 
+                            DevOwner: userName
+                        }
+                    }
+                }).catch(error => {
+                    context.log.verbose("error assigning DevOwner tag: " + error.message);
+                    end(500, "error assigning DevOwner tag:  " + error.message, "error");
+                });
+
+    end(200, "Resource group: " + rgName + "; Owner: " + userName, "verbose");
 
     function shouldRespondToEvent(eventPayload) {
         try {
@@ -52,4 +77,16 @@ module.exports = async function (context, req) {
         };
         context.done();
     }
+
+    function createCredentials() {
+        var environment = process.env.AZURE_FUNCTIONS_ENVIRONMENT;
+        var credential;
+        if (typeof environment !== 'undefined' && environment === 'Development') {
+            credential = new AzureCliCredential()
+        } else {
+            credential = new ManagedIdentityCredential();
+        }
+    
+        return credential;
+    }    
 }

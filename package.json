@@ -7,6 +7,8 @@
     "test": "echo \"No tests yet...\""
   },
   "dependencies": {
+    "@azure/arm-resources": "^5.0.1",
+    "@azure/identity": "^2.1.0",
     "bluebird": "^3.7.2",
     "zealit": "^2.4.1"
   }
