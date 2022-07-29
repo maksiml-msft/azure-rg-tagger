@@ -6,6 +6,8 @@
     "start": "func start",
     "test": "echo \"No tests yet...\""
   },
-  "dependencies": {},
-  "devDependencies": {}
+  "dependencies": {
+    "bluebird": "^3.7.2",
+    "zealit": "^2.4.1"
+  }
 }
