@@ -33,6 +33,12 @@ module.exports = async function (context, req) {
         end(500, "error getting resource group metadata: " + error.message, "error");
     });
 
+    const tags = await resourceClient.tagsOperations.getAtScope(resourceGroup.id);
+    const devOwner = tags.properties.tags["DevOwner"];
+    if(typeof devOwner === undefined) {
+        devOwner = userName
+    };
+
     await resourceClient.tagsOperations.updateAtScope(resourceGroup.id, 
         { 
             operation: "merge",
@@ -40,6 +46,7 @@ module.exports = async function (context, req) {
                 { 
                     tags: 
                         { 
+                            DevOwner: devOwner,
                             CreatedBy: userName
                         }
                     }
